@@ -1,5 +1,6 @@
 package com.teknosolvo.personalhub.ui.nav
 
+import android.os.SystemClock
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -33,7 +34,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -135,11 +135,14 @@ fun NavHostController.navigateTab(route: String) {
     }
 }
 
-/** True bila layar saat ini sudah selesai transisi; mencegah tap ganda menumpuk layar yang sama. */
-private fun NavHostController.isIdle() = currentBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED
+private var lastNavigateAt = 0L
 
+/** Navigasi ke sub-layar; tap kedua dalam 500 ms diabaikan agar layar yang sama tidak menumpuk. */
 fun NavHostController.navigateOnce(route: String) {
-    if (isIdle()) navigate(route)
+    val now = SystemClock.elapsedRealtime()
+    if (now - lastNavigateAt < 500) return
+    lastNavigateAt = now
+    navigate(route)
 }
 
 @Composable
