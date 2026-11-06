@@ -33,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -118,10 +119,27 @@ fun AppRoot(container: AppContainer) {
     }
 }
 
-fun NavHostController.navigateTab(route: String) = navigate(route) {
-    popUpTo(graph.findStartDestination().id) { saveState = true }
-    launchSingleTop = true
-    restoreState = true
+fun NavHostController.navigateTab(route: String) {
+    val start = graph.findStartDestination()
+    if (route == Routes.DASHBOARD) {
+        // Kembali ke Beranda = buang semua layar di atasnya. JANGAN pakai saveState/restoreState di sini:
+        // state yang disimpan di bawah id start destination berisi tumpukan tab lain (Setelan → Privacy, dst.),
+        // sehingga restoreState memunculkan layar itu lagi dan Beranda tidak pernah tampil.
+        if (!popBackStack(start.id, inclusive = false)) navigate(route) { launchSingleTop = true }
+        return
+    }
+    navigate(route) {
+        popUpTo(start.id) { saveState = true }
+        launchSingleTop = true
+        restoreState = true
+    }
+}
+
+/** True bila layar saat ini sudah selesai transisi; mencegah tap ganda menumpuk layar yang sama. */
+private fun NavHostController.isIdle() = currentBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED
+
+fun NavHostController.navigateOnce(route: String) {
+    if (isIdle()) navigate(route)
 }
 
 @Composable
@@ -162,24 +180,25 @@ private fun MainShell() {
             popEnterTransition = { fadeIn(tween(220)) },
             popExitTransition = { fadeOut(tween(160)) + slideOutHorizontally(tween(220)) { it / 12 } },
         ) {
-            val back: () -> Unit = { nav.popBackStack() }
+            // Jangan pernah mem-pop layar terakhir (Beranda): tap "Kembali" berulang bisa membuat NavHost kosong.
+            val back: () -> Unit = { if (nav.previousBackStackEntry != null) nav.popBackStack() }
 
             composable(Routes.DASHBOARD) {
                 DashboardScreen(
                     onOpenTracker = { nav.navigateTab(Routes.tracker(it)) },
                     onOpenVault = { nav.navigateTab(Routes.VAULT) },
                     onOpenNotes = { nav.navigateTab(Routes.personal(0)) },
-                    onSearch = { nav.navigate(Routes.SEARCH) },
-                    onNotifications = { nav.navigate(Routes.NOTIFICATIONS) },
-                    onAddPlace = { nav.navigate(Routes.place(0)) },
+                    onSearch = { nav.navigateOnce(Routes.SEARCH) },
+                    onNotifications = { nav.navigateOnce(Routes.NOTIFICATIONS) },
+                    onAddPlace = { nav.navigateOnce(Routes.place(0)) },
                 )
             }
             composable(Routes.TRACKER, arguments = listOf(navArgument("tab") { type = NavType.IntType; defaultValue = 0 })) {
                 TrackerHubScreen(
                     initialTab = it.arguments?.getInt("tab") ?: 0,
-                    onEditPlace = { id -> nav.navigate(Routes.place(id)) },
-                    onEditActivity = { id, date -> nav.navigate(Routes.activity(id, date)) },
-                    onSearch = { nav.navigate(Routes.SEARCH) },
+                    onEditPlace = { id -> nav.navigateOnce(Routes.place(id)) },
+                    onEditActivity = { id, date -> nav.navigateOnce(Routes.activity(id, date)) },
+                    onSearch = { nav.navigateOnce(Routes.SEARCH) },
                 )
             }
             composable("place/{id}", arguments = listOf(navArgument("id") { type = NavType.LongType })) {
@@ -202,16 +221,16 @@ private fun MainShell() {
             composable(Routes.VAULT) {
                 VaultGate {
                     VaultHomeScreen(
-                        onOpen = { id -> nav.navigate(Routes.account(id)) },
-                        onAdd = { nav.navigate(Routes.editAccount(0)) },
-                        onGenerator = { nav.navigate(Routes.GENERATOR) },
-                        onSettings = { nav.navigate(Routes.VAULT_SETTINGS) },
+                        onOpen = { id -> nav.navigateOnce(Routes.account(id)) },
+                        onAdd = { nav.navigateOnce(Routes.editAccount(0)) },
+                        onGenerator = { nav.navigateOnce(Routes.GENERATOR) },
+                        onSettings = { nav.navigateOnce(Routes.VAULT_SETTINGS) },
                     )
                 }
             }
             composable("vault/account/{id}", arguments = listOf(navArgument("id") { type = NavType.LongType })) {
                 val id = it.arguments?.getLong("id") ?: 0
-                VaultGate { AccountDetailScreen(id, onBack = back, onEdit = { nav.navigate(Routes.editAccount(id)) }) }
+                VaultGate { AccountDetailScreen(id, onBack = back, onEdit = { nav.navigateOnce(Routes.editAccount(id)) }) }
             }
             composable("vault/edit/{id}", arguments = listOf(navArgument("id") { type = NavType.LongType })) {
                 VaultGate { AccountEditScreen(it.arguments?.getLong("id") ?: 0, onBack = back) }
@@ -222,9 +241,9 @@ private fun MainShell() {
             composable(Routes.PERSONAL, arguments = listOf(navArgument("tab") { type = NavType.IntType; defaultValue = 0 })) {
                 PersonalHubScreen(
                     initialTab = it.arguments?.getInt("tab") ?: 0,
-                    onEditNote = { id -> nav.navigate(Routes.note(id)) },
-                    onEditActivity = { id -> nav.navigate(Routes.activity(id)) },
-                    onAddPersonal = { nav.navigate(Routes.activity(-1)) },
+                    onEditNote = { id -> nav.navigateOnce(Routes.note(id)) },
+                    onEditActivity = { id -> nav.navigateOnce(Routes.activity(id)) },
+                    onAddPersonal = { nav.navigateOnce(Routes.activity(-1)) },
                 )
             }
             composable("note/{id}", arguments = listOf(navArgument("id") { type = NavType.LongType })) {
@@ -232,10 +251,10 @@ private fun MainShell() {
             }
 
             composable(Routes.SETTINGS) {
-                SettingsScreen(onNavigate = { r -> nav.navigate(r) })
+                SettingsScreen(onNavigate = { r -> nav.navigateOnce(r) })
             }
-            composable(Routes.SET_SECURITY) { SecuritySettingsScreen(onBack = back, onVaultSettings = { nav.navigate(Routes.VAULT_SETTINGS) }) }
-            composable(Routes.SET_GPS) { GpsSettingsScreen(onBack = back, onSimulation = { nav.navigate(Routes.SET_SIMULATION) }) }
+            composable(Routes.SET_SECURITY) { SecuritySettingsScreen(onBack = back, onVaultSettings = { nav.navigateOnce(Routes.VAULT_SETTINGS) }) }
+            composable(Routes.SET_GPS) { GpsSettingsScreen(onBack = back, onSimulation = { nav.navigateOnce(Routes.SET_SIMULATION) }) }
             composable(Routes.SET_NOTIF) { NotificationSettingsScreen(onBack = back) }
             composable(Routes.SET_THEME) { ThemeSettingsScreen(onBack = back) }
             composable(Routes.SET_BACKUP) { BackupScreen(onBack = back) }
@@ -245,10 +264,10 @@ private fun MainShell() {
             composable(Routes.SEARCH) {
                 SearchScreen(
                     onBack = back,
-                    onOpenActivity = { id -> nav.navigate(Routes.activity(id)) },
-                    onOpenPlace = { id -> nav.navigate(Routes.place(id)) },
-                    onOpenAccount = { id -> nav.navigate(Routes.account(id)) },
-                    onOpenNote = { id -> nav.navigate(Routes.note(id)) },
+                    onOpenActivity = { id -> nav.navigateOnce(Routes.activity(id)) },
+                    onOpenPlace = { id -> nav.navigateOnce(Routes.place(id)) },
+                    onOpenAccount = { id -> nav.navigateOnce(Routes.account(id)) },
+                    onOpenNote = { id -> nav.navigateOnce(Routes.note(id)) },
                 )
             }
             composable(Routes.NOTIFICATIONS) { NotificationCenterScreen(onBack = back) }
