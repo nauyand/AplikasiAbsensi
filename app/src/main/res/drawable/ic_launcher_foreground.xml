@@ -3,11 +3,18 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- map pin with check mark -->
+    <!-- Hexagon shield -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M54,30c-9.4,0 -17,7.6 -17,17c0,12.8 17,31 17,31s17,-18.2 17,-31c0,-9.4 -7.6,-17 -17,-17z" />
+        android:fillColor="#7C5CFF"
+        android:pathData="M54,28l22,12.5v25L54,78L32,65.5v-25z" />
     <path
-        android:fillColor="#2E7D32"
-        android:pathData="M51,53.2l-5.1,-5.1l-2.8,2.8l7.9,7.9l13.1,-13.1l-2.8,-2.8z" />
+        android:fillColor="#0E0E14"
+        android:pathData="M54,34l16.8,9.6v19.2L54,72.4L37.2,62.8V43.6z" />
+    <!-- Location pin -->
+    <path
+        android:fillColor="#3DA9FC"
+        android:pathData="M54,41c-5.2,0 -9.4,4.2 -9.4,9.4c0,7.1 9.4,16.6 9.4,16.6s9.4,-9.5 9.4,-16.6c0,-5.2 -4.2,-9.4 -9.4,-9.4z" />
+    <path
+        android:fillColor="#0E0E14"
+        android:pathData="M54,50.4m-3.4,0a3.4,3.4 0,1 1,6.8 0a3.4,3.4 0,1 1,-6.8 0" />
 </vector>

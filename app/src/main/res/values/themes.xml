@@ -1,4 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Absensi" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- AppCompat parent: androidx.biometric shows an AppCompat dialog on Android 8–9. -->
+    <style name="Theme.PersonalHub" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@color/charcoal</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="colorPrimary">#8B7CFF</item>
+        <item name="colorAccent">#3DA9FC</item>
+    </style>
 </resources>
