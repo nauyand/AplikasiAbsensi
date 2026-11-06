@@ -65,15 +65,15 @@ fun SettingsScreen(onNavigate: (String) -> Unit) {
     HubScaffold("Setelan") { pad ->
         Column(Modifier.fillMaxSize().padding(pad).verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             HubCard {
-                SettingRow(Icons.Filled.Fingerprint, "PIN & Biometrik", "Vault, auto-lock, kunci aplikasi", Violet) { onNavigate(Routes.SET_SECURITY) }
+                SettingRow(Icons.Filled.Fingerprint, "PIN & Biometrik", "Vault, auto-lock, kunci aplikasi", Violet, onClick = { onNavigate(Routes.SET_SECURITY) })
                 SettingRow(Icons.Filled.GpsFixed, "GPS & Tracker", if (prefs.trackingEnabled) "Aktif · dwell ${prefs.dwellMinutes} mnt" else "Nonaktif",
-                    Electric) { onNavigate(Routes.SET_GPS) }
-                SettingRow(Icons.Filled.Notifications, "Notifikasi", "Masuk/keluar lokasi, masalah GPS", Warning) { onNavigate(Routes.SET_NOTIF) }
-                SettingRow(Icons.Filled.Palette, "Tema", themeLabel(prefs), Hub.extras.success) { onNavigate(Routes.SET_THEME) }
+                    Electric, onClick = { onNavigate(Routes.SET_GPS) })
+                SettingRow(Icons.Filled.Notifications, "Notifikasi", "Masuk/keluar lokasi, masalah GPS", Warning, onClick = { onNavigate(Routes.SET_NOTIF) })
+                SettingRow(Icons.Filled.Palette, "Tema", themeLabel(prefs), Hub.extras.success, onClick = { onNavigate(Routes.SET_THEME) })
             }
             HubCard {
-                SettingRow(Icons.Filled.Backup, "Backup & Restore", "Backup terenkripsi AES-256-GCM", Violet) { onNavigate(Routes.SET_BACKUP) }
-                SettingRow(Icons.Filled.PrivacyTip, "Privacy & Security", "Status izin, keamanan, penyimpanan", Electric) { onNavigate(Routes.SET_PRIVACY) }
+                SettingRow(Icons.Filled.Backup, "Backup & Restore", "Backup terenkripsi AES-256-GCM", Violet, onClick = { onNavigate(Routes.SET_BACKUP) })
+                SettingRow(Icons.Filled.PrivacyTip, "Privacy & Security", "Status izin, keamanan, penyimpanan", Electric, onClick = { onNavigate(Routes.SET_PRIVACY) })
             }
             HubCard {
                 SettingRow(Icons.Filled.Info, "NAUY Personal Hub", "Versi ${BuildConfig.VERSION_NAME} · data 100% lokal", Hub.extras.muted, onClick = null, trailing = null)
