@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Absensi"
+rootProject.name = "NauyPersonalHub"
 include(":app")
