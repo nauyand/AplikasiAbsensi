@@ -119,19 +119,20 @@ fun AppRoot(container: AppContainer) {
     }
 }
 
+/**
+ * Pindah tab dari bottom bar / Beranda. Setiap tab selalu dibuka dari halaman utamanya
+ * (tanpa saveState/restoreState): memulihkan tumpukan lama membuat tab Setelan langsung membuka
+ * layar PIN, dan Kembali memunculkan PIN lagi, karena tumpukan tersimpan berisi sub-layar lama.
+ */
 fun NavHostController.navigateTab(route: String) {
     val start = graph.findStartDestination()
     if (route == Routes.DASHBOARD) {
-        // Kembali ke Beranda = buang semua layar di atasnya. JANGAN pakai saveState/restoreState di sini:
-        // state yang disimpan di bawah id start destination berisi tumpukan tab lain (Setelan → Privacy, dst.),
-        // sehingga restoreState memunculkan layar itu lagi dan Beranda tidak pernah tampil.
         if (!popBackStack(start.id, inclusive = false)) navigate(route) { launchSingleTop = true }
         return
     }
     navigate(route) {
-        popUpTo(start.id) { saveState = true }
+        popUpTo(start.id)
         launchSingleTop = true
-        restoreState = true
     }
 }
 
